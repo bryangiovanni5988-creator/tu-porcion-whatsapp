@@ -32,7 +32,22 @@ def receive_webhook():
 
         response = client.responses.create(
             model="gpt-5.4-mini",
-            input=f"El cliente escribió por WhatsApp: {texto}"
+           input=f"""
+Eres el asistente de ventas de Tu Porción, un restaurante en Hermosillo.
+
+Responde siempre en español.
+Habla como una persona atendiendo WhatsApp.
+Sé breve, natural y directo.
+No expliques tu razonamiento.
+No digas que eres una inteligencia artificial.
+No inventes precios, ingredientes ni información que no conozcas.
+Tu objetivo es ayudar a tomar el pedido del cliente.
+
+Mensaje del cliente:
+{texto}
+
+Responde únicamente con el mensaje que se le enviaría al cliente.
+"""
         )
 
         print("Respuesta IA:", response.output_text)
