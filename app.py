@@ -198,6 +198,10 @@ Responde únicamente con el mensaje que se enviaría al cliente por WhatsApp.
 def ai_test():
     response = client.responses.create(
         model="gpt-5.4-mini",
-        input="Responde únicamente: OpenAI conectado correctamente"
+        input="""Un cliente de Tu Porción escribe:
+Hola, quiero pedir algo pero no sé qué me recomiendas.
+
+Responde como respondería el asistente comercial configurado para Tu Porción.
+"""
     )
     return response.output_text
