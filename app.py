@@ -3,6 +3,7 @@ from flask import Flask, request
 from openai import OpenAI
 import requests
 from config_tu_porcion import *
+import json
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
@@ -24,6 +25,36 @@ def verify_webhook():
 
     return "Forbidden", 403
 def construir_prompt(texto):
+    contexto_negocio = {
+        "horarios": HORARIOS,
+        "desayunos": DESAYUNOS,
+        "bowl": BOWL,
+        "platillos": PLATILLOS,
+        "sushi": SUSHI,
+        "planes": PLANES,
+        "extras": EXTRAS,
+        "bebidas": BEBIDAS,
+        "nutricion": NUTRICION,
+        "sustituciones": SUSTITUCIONES,
+        "reglas_bebidas": REGLAS_BEBIDAS,
+        "recomendaciones": RECOMENDACIONES,
+        "convenios": CONVENIOS,
+        "destinos_gratis": DESTINOS_GRATIS,
+        "puntos_cfe": PUNTOS_CFE,
+        "tarifas_domicilio": TARIFAS_DOMICILIO,
+        "reglas_domicilio": REGLAS_DOMICILIO,
+        "metodos_pago": METODOS_PAGO,
+        "validacion_comprobante": VALIDACION_COMPROBANTE,
+        "estados_demanda": ESTADOS_DEMANDA,
+        "pedidos_programados": PEDIDOS_PROGRAMADOS,
+        "reglas_cambios": REGLAS_CAMBIOS,
+    }
+
+    contexto_json = json.dumps(
+        contexto_negocio,
+        ensure_ascii=False
+    )
+    
     return f"""
 Eres el asistente de ventas por WhatsApp de Tu Porción, un restaurante de comida saludable en Hermosillo, Sonora.
 
@@ -106,11 +137,17 @@ Hazlo cuando:
 - soliciten algo que no conoces;
 - pidan hablar con una persona.
 
+INFORMACIÓN OFICIAL Y REGLAS ACTUALES DE TU PORCIÓN:
+
+{contexto_json}
+
+Usa esta información como fuente de verdad.
+Si hay conflicto entre una suposición tuya y esta información, usa esta información.
+No inventes precios, productos, descuentos, sustituciones, métodos de pago ni reglas que no estén aquí.
+
 Mensaje del cliente:
 {texto}
-
-Responde únicamente con el mensaje que se enviaría al cliente por WhatsApp.
-"""
+Responde únicamente con el mensaje que se enviaría al cliente por WhatsApp."""
 @app.route("/webhook", methods=["POST"])
 def receive_webhook():
     data = request.get_json()
