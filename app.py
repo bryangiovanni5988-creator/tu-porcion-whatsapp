@@ -52,28 +52,28 @@ Responde únicamente con el mensaje que se le enviaría al cliente.
         )
 
         print("Respuesta IA:", response.output_text)
-telefono_cliente = message["from"]
-
-phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
-whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
-
-url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
-
-headers = {
-    "Authorization": f"Bearer {whatsapp_token}",
-    "Content-Type": "application/json"
-}
-
-payload = {
-    "messaging_product": "whatsapp",
-    "to": telefono_cliente,
-    "type": "text",
-    "text": {
-        "body": response.output_text
+    telefono_cliente = message["from"]
+    
+    phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+    whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
+    
+    url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
+    
+    headers = {
+        "Authorization": f"Bearer {whatsapp_token}",
+        "Content-Type": "application/json"
     }
-}
-
-resultado = requests.post(url, headers=headers, json=payload)
+    
+    payload = {
+        "messaging_product": "whatsapp",
+        "to": telefono_cliente,
+        "type": "text",
+        "text": {
+            "body": response.output_text
+        }
+    }
+    
+    resultado = requests.post(url, headers=headers, json=payload)
 
 print("Respuesta WhatsApp:", resultado.status_code, resultado.text)
     
