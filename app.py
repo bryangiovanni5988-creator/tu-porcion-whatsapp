@@ -153,7 +153,6 @@ MENSAJE DEL CLIENTE:
 
 Responde únicamente con el mensaje que se enviaría al cliente por WhatsApp.
 """
-"""
         )
 
         print("Respuesta IA:", response.output_text)
