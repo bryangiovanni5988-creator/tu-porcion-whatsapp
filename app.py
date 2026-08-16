@@ -165,10 +165,11 @@ def receive_webhook():
     return "EVENT_RECEIVED", 200
 @app.route("/ai-test")
 def ai_test():
-     response = client.responses.create(
+    response = client.responses.create(
         model="gpt-5.4-mini",
         input=construir_prompt(
             "Hola, quiero pedir algo pero no sé qué me recomiendas."
         )
     )
+
     return response.output_text
