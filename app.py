@@ -25,6 +25,21 @@ def verify_webhook():
 def receive_webhook():
     data = request.get_json()
     print("Webhook recibido:", data)
+
+    try:
+        message = data["entry"][0]["changes"][0]["value"]["messages"][0]
+        texto = message["text"]["body"]
+
+        response = client.responses.create(
+            model="gpt-5.4-mini",
+            input=f"El cliente escribió por WhatsApp: {texto}"
+        )
+
+        print("Respuesta IA:", response.output_text)
+
+    except Exception as e:
+        print("No se pudo procesar como mensaje de texto:", e)
+
     return "EVENT_RECEIVED", 200
 @app.route("/ai-test")
 def ai_test():
