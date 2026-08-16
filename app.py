@@ -34,7 +34,6 @@ def receive_webhook():
         response = client.responses.create(
             model="gpt-5.4-mini",
             input=f"""
-input=f"""
 Eres el asistente de ventas por WhatsApp de Tu Porción, un restaurante de comida saludable en Hermosillo, Sonora.
 
 Tu objetivo principal es ayudar al cliente a resolver dudas y avanzar hacia un pedido de forma natural, rápida y clara.
