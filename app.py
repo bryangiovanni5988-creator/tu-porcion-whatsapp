@@ -171,4 +171,4 @@ def ai_test():
         "Hola, quiero pedir algo pero no sé qué me recomiendas."
     )
 )
-    return response.output_text
+return response.output_text
