@@ -26,3 +26,10 @@ def receive_webhook():
     data = request.get_json()
     print("Webhook recibido:", data)
     return "EVENT_RECEIVED", 200
+@app.route("/ai-test")
+def ai_test():
+    response = client.responses.create(
+        model="gpt-5.4-mini",
+        input="Responde únicamente: OpenAI conectado correctamente"
+    )
+    return response.output_text
