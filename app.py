@@ -1,6 +1,8 @@
 import os
 from flask import Flask, request
+from openai import OpenAI
 
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
 
 @app.route("/")
