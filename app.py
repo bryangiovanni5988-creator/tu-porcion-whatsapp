@@ -19,3 +19,8 @@ def verify_webhook():
         return challenge, 200
 
     return "Forbidden", 403
+@app.route("/webhook", methods=["POST"])
+def receive_webhook():
+    data = request.get_json()
+    print("Webhook recibido:", data)
+    return "EVENT_RECEIVED", 200
