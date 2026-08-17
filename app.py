@@ -1229,13 +1229,15 @@ Si hay conflicto entre una suposición tuya y esta información, usa esta inform
 No inventes precios, productos, descuentos, sustituciones, métodos de pago ni reglas que no estén aquí.
 
 
-Devuelve la respuesta siguiendo exactamente el formato estructurado solicitado.
+FORMATO DE RESPUESTA
 
-En "mensaje_cliente" escribe únicamente el texto que se enviará al cliente por WhatsApp.
-
-En "pedido" devuelve el estado completo y actualizado del pedido.
-
-No incluyas explicaciones fuera de esos campos.
+- Devuelve la respuesta siguiendo exactamente el formato estructurado solicitado por el sistema.
+- En "mensaje_cliente" escribe únicamente el mensaje natural que se enviará al cliente por WhatsApp.
+- En "pedido" devuelve siempre el estado completo y actualizado del pedido, incluyendo todos los datos previamente confirmados que sigan vigentes.
+- No elimines datos del pedido salvo que el cliente los cambie o elimine explícitamente.
+- Si todavía falta información, conserva los campos correspondientes sin inventar datos.
+- No escribas JSON manualmente dentro de "mensaje_cliente".
+- No incluyas explicaciones, comentarios ni texto fuera de los campos estructurados solicitados.
 """
 @app.route("/webhook", methods=["POST"])
 def receive_webhook():
