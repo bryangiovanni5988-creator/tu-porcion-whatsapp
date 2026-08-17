@@ -161,7 +161,8 @@ def receive_webhook():
 
         telefono_memoria = message["from"]
         respuesta_anterior = ultimo_response_por_telefono.get(telefono_memoria)
-        
+        print("TEL MEMORIA:", telefono_memoria)
+        print("PREVIOUS:", respuesta_anterior)
         parametros = {
             "model": "gpt-5.4-mini",
             "input": construir_prompt(texto)
