@@ -8,6 +8,8 @@ import json
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
 
+ultimo_response_por_telefono = {}
+
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
@@ -157,10 +159,20 @@ def receive_webhook():
         message = data["entry"][0]["changes"][0]["value"]["messages"][0]
         texto = message["text"]["body"]
 
-        response = client.responses.create(
-            model="gpt-5.4-mini",
-      input=construir_prompt(texto)
-)
+        telefono_memoria = message["from"]
+        respuesta_anterior = ultimo_response_por_telefono.get(telefono_memoria)
+        
+        parametros = {
+            "model": "gpt-5.4-mini",
+            "input": construir_prompt(texto)
+        }
+        
+        if respuesta_anterior:
+            parametros["previous_response_id"] = respuesta_anterior
+        
+        response = client.responses.create(**parametros)
+        
+        ultimo_response_por_telefono[telefono_memoria] = response.id
 
         print("Respuesta IA:", response.output_text)
 
