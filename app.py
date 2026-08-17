@@ -569,8 +569,8 @@ def receive_webhook():
             }
         }
                 
-                if respuesta_anterior:
-                    parametros["previous_response_id"] = respuesta_anterior
+            if respuesta_anterior:
+                parametros["previous_response_id"] = respuesta_anterior
                 
                 response = client.responses.create(**parametros)
                 
