@@ -26,7 +26,7 @@ def verify_webhook():
         return challenge, 200
 
     return "Forbidden", 403
-def construir_prompt(texto):
+def construir_prompt():
     contexto_negocio = {
         "horarios": HORARIOS,
         "desayunos": DESAYUNOS,
@@ -80,6 +80,13 @@ REGLAS DE CONVERSACIÓN
 - Si el cliente cambia de opinión, actualiza el pedido sin discutir.
 - Si existe riesgo de equivocarte, pide aclaración.
 - Nunca confirmes que un pedido está cerrado, pagado o enviado si el sistema todavía no lo ha confirmado.
+- Mantén el contexto de toda la conversación y del pedido en curso.
+- Una respuesta corta del cliente normalmente responde a tu última pregunta.
+- Si preguntaste "¿Fit o Supreme?" y responde "Fit", conserva el platillo anterior y continúa con ese pedido.
+- Si preguntaste proteína y responde "pollo", conserva platillo, tamaño y demás datos anteriores.
+- Nunca vuelvas a preguntar información que el cliente ya dio, salvo que el cliente la cambie.
+- Nunca reinicies el pedido ni vuelvas a ofrecer el menú completo si ya hay un pedido en curso.
+- Antes de hacer una pregunta, revisa qué datos del pedido ya conoces.
 
 ESTILO DE TU PORCIÓN
 
@@ -95,30 +102,14 @@ Puedes usar expresiones sencillas como:
 
 INFORMACIÓN GENERAL
 
-FIT:
-- Aproximadamente 400-500 kcal.
-- Aproximadamente 45 g de proteína.
+FIT Y SUPREME
 
-SUPREME:
-- Aproximadamente 800-900 kcal.
-- Aproximadamente 60 g de proteína.
-- Incluye mayor cantidad de proteína y carbohidrato.
-
-Proteínas comunes:
-- Pollo
-- Res
-- Atún
-- Camarón
-- Marlín
-
-Algunos platillos conocidos:
-- Pasta verde
-- Teriyaki de pollo
-- Ceviche de atún
-- Pechuga guisada con pasta
-- Pechuga con papas horneadas
-- Bowls
-- Quesadillas de marlín
+- Fit es la porción regular.
+- Supreme incluye una porción mayor de proteína y carbohidrato.
+- Usa siempre el precio específico del platillo indicado en la información oficial.
+- No des calorías ni proteína genéricas para Fit o Supreme.
+- Si el cliente pregunta por calorías o proteína, usa únicamente los valores nutricionales disponibles para ese platillo.
+- Si no existe un dato nutricional específico, dilo brevemente y no lo inventes.
 
 FLUJO PARA TOMAR PEDIDOS
 
@@ -147,8 +138,7 @@ Usa esta información como fuente de verdad.
 Si hay conflicto entre una suposición tuya y esta información, usa esta información.
 No inventes precios, productos, descuentos, sustituciones, métodos de pago ni reglas que no estén aquí.
 
-Mensaje del cliente:
-{texto}
+
 Responde únicamente con el mensaje que se enviaría al cliente por WhatsApp."""
 @app.route("/webhook", methods=["POST"])
 def receive_webhook():
@@ -165,7 +155,8 @@ def receive_webhook():
         print("PREVIOUS:", respuesta_anterior)
         parametros = {
             "model": "gpt-5.4-mini",
-            "input": construir_prompt(texto)
+            "instructions": construir_prompt(),
+            "input": texto
         }
         
         if respuesta_anterior:
@@ -221,9 +212,8 @@ def receive_webhook():
 def ai_test():
     response = client.responses.create(
         model="gpt-5.4-mini",
-        input=construir_prompt(
-            "Hola, quiero pedir algo pero no sé qué me recomiendas."
-        )
+        instructions=construir_prompt(),
+        input="Hola, quiero pedir algo pero no sé qué me recomiendas."
     )
 
     return response.output_text
