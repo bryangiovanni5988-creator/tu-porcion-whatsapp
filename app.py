@@ -572,54 +572,54 @@ def receive_webhook():
         if respuesta_anterior:
             parametros["previous_response_id"] = respuesta_anterior
                 
-            response = client.responses.create(**parametros)
-            
-            respuesta_json = json.loads(response.output_text)
-            
-            mensaje_cliente = respuesta_json["mensaje_cliente"]
-            pedido_actualizado = respuesta_json["pedido"]
-            
-            pedido_por_telefono[telefono_memoria] = pedido_actualizado
-            ultimo_response_por_telefono[telefono_memoria] = response.id
-            
-            print("RESPUESTA CLIENTE:", mensaje_cliente)
-            print("PEDIDO ACTUALIZADO:", pedido_actualizado)
-            
-            telefono_cliente = message["from"]
-            # Normalizar números de México
-            if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
-                       telefono_cliente = "52" + telefono_cliente[3:]
-            phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
-            whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
-    
-            url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
-    
-            headers = {
-                "Authorization": f"Bearer {whatsapp_token}",
-                "Content-Type": "application/json"
-            }
-    
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": telefono_cliente,
-                "type": "text",
-                "text": {
-        "body": mensaje_cliente
-    }
-            }
-    
-            resultado = requests.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=20
-            )
-    
-            print(
-                "Respuesta WhatsApp:",
-                resultado.status_code,
-                resultado.text
-            )
+        response = client.responses.create(**parametros)
+        
+        respuesta_json = json.loads(response.output_text)
+        
+        mensaje_cliente = respuesta_json["mensaje_cliente"]
+        pedido_actualizado = respuesta_json["pedido"]
+        
+        pedido_por_telefono[telefono_memoria] = pedido_actualizado
+        ultimo_response_por_telefono[telefono_memoria] = response.id
+        
+        print("RESPUESTA CLIENTE:", mensaje_cliente)
+        print("PEDIDO ACTUALIZADO:", pedido_actualizado)
+        
+        telefono_cliente = message["from"]
+        # Normalizar números de México
+        if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
+                   telefono_cliente = "52" + telefono_cliente[3:]
+        phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+        whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
+
+        url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
+
+        headers = {
+            "Authorization": f"Bearer {whatsapp_token}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": telefono_cliente,
+            "type": "text",
+            "text": {
+    "body": mensaje_cliente
+}
+        }
+
+        resultado = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=20
+        )
+
+        print(
+            "Respuesta WhatsApp:",
+            resultado.status_code,
+            resultado.text
+        )
 
     except Exception as e:
         print("No se pudo procesar como mensaje de texto:", e)
