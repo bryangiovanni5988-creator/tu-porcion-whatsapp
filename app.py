@@ -973,7 +973,7 @@ En "mensaje_cliente" escribe únicamente el texto que se enviará al cliente por
 En "pedido" devuelve el estado completo y actualizado del pedido.
 
 No incluyas explicaciones fuera de esos campos.
-
+"""
 @app.route("/webhook", methods=["POST"])
 def receive_webhook():
     data = request.get_json()
