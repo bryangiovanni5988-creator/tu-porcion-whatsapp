@@ -457,169 +457,169 @@ def receive_webhook():
         respuesta_anterior = ultimo_response_por_telefono.get(telefono_memoria)
         print("TEL MEMORIA:", telefono_memoria)
         print("PREVIOUS:", respuesta_anterior)
-    parametros = {
-        "model": "gpt-5.4-mini",
-        "instructions": construir_prompt(pedido_actual),
-        "input": texto,
-        "text": {
-            "format": {
-                "type": "json_schema",
-                "name": "respuesta_tu_porcion",
-                "strict": True,
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "mensaje_cliente": {
-                            "type": "string"
-                        },
-                        "pedido": {
-                            "type": "object",
-                            "properties": {
-                                "productos": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "nombre": {"type": "string"},
-                                            "version": {
-                                                "type": ["string", "null"]
-                                            },
-                                            "proteina": {
-                                                "type": ["string", "null"]
-                                            },
-                                            "cantidad": {
-                                                "type": "integer"
-                                            },
-                                            "precio_unitario": {
-                                                "type": "number"
-                                            },
-                                            "modificaciones": {
-                                                "type": "array",
-                                                "items": {"type": "string"}
-                                            },
-                                            "extras": {
-                                                "type": "array",
-                                                "items": {"type": "string"}
-                                            }
-                                        },
-                                        "required": [
-                                            "nombre",
-                                            "version",
-                                            "proteina",
-                                            "cantidad",
-                                            "precio_unitario",
-                                            "modificaciones",
-                                            "extras"
-                                        ],
-                                        "additionalProperties": False
-                                    }
-                                },
-                                "subtotal": {"type": "number"},
-                                "descuento_porcentaje": {"type": "number"},
-                                "descuento_monto": {"type": "number"},
-                                "envio": {"type": "number"},
-                                "total": {"type": "number"},
-                                "empresa": {
-                                    "type": ["string", "null"]
-                                },
-                                "modalidad": {
-                                    "type": ["string", "null"]
-                                },
-                                "destino": {
-                                    "type": ["string", "null"]
-                                },
-                                "punto_entrega": {
-                                    "type": ["string", "null"]
-                                },
-                                "metodo_pago": {
-                                    "type": ["string", "null"]
-                                },
-                                "estado_pago": {"type": "string"},
-                                "hora_solicitada": {
-                                    "type": ["string", "null"]
-                                },
-                                "estado": {"type": "string"}
+        parametros = {
+            "model": "gpt-5.4-mini",
+            "instructions": construir_prompt(pedido_actual),
+            "input": texto,
+            "text": {
+                "format": {
+                    "type": "json_schema",
+                    "name": "respuesta_tu_porcion",
+                    "strict": True,
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "mensaje_cliente": {
+                                "type": "string"
                             },
-                            "required": [
-                                "productos",
-                                "subtotal",
-                                "descuento_porcentaje",
-                                "descuento_monto",
-                                "envio",
-                                "total",
-                                "empresa",
-                                "modalidad",
-                                "destino",
-                                "punto_entrega",
-                                "metodo_pago",
-                                "estado_pago",
-                                "hora_solicitada",
-                                "estado"
-                            ],
-                            "additionalProperties": False
-                        }
-                    },
-                    "required": [
-                        "mensaje_cliente",
-                        "pedido"
-                    ],
-                    "additionalProperties": False
+                            "pedido": {
+                                "type": "object",
+                                "properties": {
+                                    "productos": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "nombre": {"type": "string"},
+                                                "version": {
+                                                    "type": ["string", "null"]
+                                                },
+                                                "proteina": {
+                                                    "type": ["string", "null"]
+                                                },
+                                                "cantidad": {
+                                                    "type": "integer"
+                                                },
+                                                "precio_unitario": {
+                                                    "type": "number"
+                                                },
+                                                "modificaciones": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                },
+                                                "extras": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                }
+                                            },
+                                            "required": [
+                                                "nombre",
+                                                "version",
+                                                "proteina",
+                                                "cantidad",
+                                                "precio_unitario",
+                                                "modificaciones",
+                                                "extras"
+                                            ],
+                                            "additionalProperties": False
+                                        }
+                                    },
+                                    "subtotal": {"type": "number"},
+                                    "descuento_porcentaje": {"type": "number"},
+                                    "descuento_monto": {"type": "number"},
+                                    "envio": {"type": "number"},
+                                    "total": {"type": "number"},
+                                    "empresa": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "modalidad": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "destino": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "punto_entrega": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "metodo_pago": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "estado_pago": {"type": "string"},
+                                    "hora_solicitada": {
+                                        "type": ["string", "null"]
+                                    },
+                                    "estado": {"type": "string"}
+                                },
+                                "required": [
+                                    "productos",
+                                    "subtotal",
+                                    "descuento_porcentaje",
+                                    "descuento_monto",
+                                    "envio",
+                                    "total",
+                                    "empresa",
+                                    "modalidad",
+                                    "destino",
+                                    "punto_entrega",
+                                    "metodo_pago",
+                                    "estado_pago",
+                                    "hora_solicitada",
+                                    "estado"
+                                ],
+                                "additionalProperties": False
+                            }
+                        },
+                        "required": [
+                            "mensaje_cliente",
+                            "pedido"
+                        ],
+                        "additionalProperties": False
+                    }
                 }
             }
         }
-    }
-            
-            if respuesta_anterior:
-                parametros["previous_response_id"] = respuesta_anterior
-            
-            response = client.responses.create(**parametros)
-            
-            respuesta_json = json.loads(response.output_text)
-            
-            mensaje_cliente = respuesta_json["mensaje_cliente"]
-            pedido_actualizado = respuesta_json["pedido"]
-            
-            pedido_por_telefono[telefono_memoria] = pedido_actualizado
-            ultimo_response_por_telefono[telefono_memoria] = response.id
-            
-            print("RESPUESTA CLIENTE:", mensaje_cliente)
-            print("PEDIDO ACTUALIZADO:", pedido_actualizado)
-            
-            telefono_cliente = message["from"]
-            # Normalizar números de México
-            if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
-                       telefono_cliente = "52" + telefono_cliente[3:]
-            phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
-            whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
-    
-            url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
-    
-            headers = {
-                "Authorization": f"Bearer {whatsapp_token}",
-                "Content-Type": "application/json"
-            }
-    
-            payload = {
-                "messaging_product": "whatsapp",
-                "to": telefono_cliente,
-                "type": "text",
-                "text": {
-        "body": mensaje_cliente
-    }
-            }
-    
-            resultado = requests.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=20
-            )
-    
-            print(
-                "Respuesta WhatsApp:",
-                resultado.status_code,
-                resultado.text
-            )
+                
+                if respuesta_anterior:
+                    parametros["previous_response_id"] = respuesta_anterior
+                
+                response = client.responses.create(**parametros)
+                
+                respuesta_json = json.loads(response.output_text)
+                
+                mensaje_cliente = respuesta_json["mensaje_cliente"]
+                pedido_actualizado = respuesta_json["pedido"]
+                
+                pedido_por_telefono[telefono_memoria] = pedido_actualizado
+                ultimo_response_por_telefono[telefono_memoria] = response.id
+                
+                print("RESPUESTA CLIENTE:", mensaje_cliente)
+                print("PEDIDO ACTUALIZADO:", pedido_actualizado)
+                
+                telefono_cliente = message["from"]
+                # Normalizar números de México
+                if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
+                           telefono_cliente = "52" + telefono_cliente[3:]
+                phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+                whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
+        
+                url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
+        
+                headers = {
+                    "Authorization": f"Bearer {whatsapp_token}",
+                    "Content-Type": "application/json"
+                }
+        
+                payload = {
+                    "messaging_product": "whatsapp",
+                    "to": telefono_cliente,
+                    "type": "text",
+                    "text": {
+            "body": mensaje_cliente
+        }
+                }
+        
+                resultado = requests.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=20
+                )
+        
+                print(
+                    "Respuesta WhatsApp:",
+                    resultado.status_code,
+                    resultado.text
+                )
 
     except Exception as e:
         print("No se pudo procesar como mensaje de texto:", e)
