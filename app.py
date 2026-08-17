@@ -165,6 +165,9 @@ def receive_webhook():
         print("Respuesta IA:", response.output_text)
 
         telefono_cliente = message["from"]
+        # Normalizar números de México
+        if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
+           telefono_cliente = "52" + telefono_cliente[3:]
         phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
         whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
 
