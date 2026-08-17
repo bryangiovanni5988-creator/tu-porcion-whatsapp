@@ -10,6 +10,26 @@ app = Flask(__name__)
 
 ultimo_response_por_telefono = {}
 
+pedido_por_telefono = {}
+
+def crear_pedido_vacio():
+    return {
+        "productos": [],
+        "subtotal": 0.0,
+        "descuento_porcentaje": 0,
+        "descuento_monto": 0.0,
+        "envio": 0.0,
+        "total": 0.0,
+        "empresa": None,
+        "modalidad": None,
+        "destino": None,
+        "punto_entrega": None,
+        "metodo_pago": None,
+        "estado_pago": "pendiente",
+        "hora_solicitada": None,
+        "estado": "en_construccion"
+    }
+    
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
@@ -26,7 +46,7 @@ def verify_webhook():
         return challenge, 200
 
     return "Forbidden", 403
-def construir_prompt():
+def construir_prompt(pedido_actual=None):
     contexto_negocio = {
         "horarios": HORARIOS,
         "desayunos": DESAYUNOS,
@@ -56,7 +76,10 @@ def construir_prompt():
         contexto_negocio,
         ensure_ascii=False
     )
-    
+    pedido_json = json.dumps(
+        pedido_actual or crear_pedido_vacio(),
+        ensure_ascii=False
+    )
     return f"""
 Eres el asistente de ventas por WhatsApp de Tu Porción, un restaurante de comida saludable en Hermosillo, Sonora.
 
@@ -268,8 +291,20 @@ PRECIOS, SUBTOTAL Y TOTAL
   Puedes decir "La limonada mineral cuesta $45" o "Con la limonada, llevamos $199".
 
 - No des el TOTAL FINAL hasta conocer si el pedido será para recoger o a domicilio.
-- Si existe descuento aplicable, aplícalo únicamente a los conceptos permitidos por las reglas oficiales.
 - No apliques descuentos a bebidas, extras, domicilio u otros conceptos excluidos.
+
+DESCUENTOS DE EMPRESAS Y CONVENIOS
+
+- Los trabajadores de CFE, CT y las demás empresas incluidas como destinos empresariales de entrega gratuita tienen 20% de descuento.
+- También aplica el 20% a las empresas incluidas expresamente en CONVENIOS.
+- El descuento aplica únicamente a platillos y desayunos.
+- No aplica a bebidas, extras, aderezos adicionales ni costo de domicilio.
+- El beneficio de entrega gratuita y el descuento son independientes y pueden aplicarse al mismo pedido.
+- Si el cliente indica que trabaja en una de estas empresas, aplica el descuento correspondiente.
+- No confundas el nombre de una empresa con otra.
+- Calcula el 20% multiplicando el precio elegible por 0.80.
+- Si el cliente indica que trabaja en una empresa con convenio o solicita la entrega en uno de esos destinos empresariales, aplica automáticamente el 20% a los productos elegibles.
+- En CFE, el descuento aplica independientemente del punto de entrega; el punto de CFE solo se pregunta para saber dónde entregar.
 
 CANTIDADES
 
@@ -380,6 +415,16 @@ Pasa a revisión humana o de cocina cuando:
 
 No pases a una persona simplemente porque el pedido normal ya está completo.
 
+ESTADO ESTRUCTURADO ACTUAL DEL PEDIDO:
+
+{pedido_json}
+
+- Este es el estado actual del pedido en el sistema.
+- Consérvalo durante la conversación.
+- No inventes datos faltantes.
+- No elimines datos existentes salvo que el cliente los cambie explícitamente.
+- Usa este estado para evitar volver a preguntar información ya confirmada.
+
 INFORMACIÓN OFICIAL Y REGLAS ACTUALES DE TU PORCIÓN:
 
 {contexto_json}
@@ -400,28 +445,150 @@ def receive_webhook():
         texto = message["text"]["body"]
 
         telefono_memoria = message["from"]
+
+        pedido_actual = pedido_por_telefono.get(telefono_memoria)
+
+        if pedido_actual is None:
+            pedido_actual = crear_pedido_vacio()
+            pedido_por_telefono[telefono_memoria] = pedido_actual
+        
+        print("PEDIDO ACTUAL:", pedido_actual)
+
         respuesta_anterior = ultimo_response_por_telefono.get(telefono_memoria)
         print("TEL MEMORIA:", telefono_memoria)
         print("PREVIOUS:", respuesta_anterior)
-        parametros = {
-            "model": "gpt-5.4-mini",
-            "instructions": construir_prompt(),
-            "input": texto
+parametros = {
+    "model": "gpt-5.4-mini",
+    "instructions": construir_prompt(pedido_actual),
+    "input": texto,
+    "text": {
+        "format": {
+            "type": "json_schema",
+            "name": "respuesta_tu_porcion",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "mensaje_cliente": {
+                        "type": "string"
+                    },
+                    "pedido": {
+                        "type": "object",
+                        "properties": {
+                            "productos": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "nombre": {"type": "string"},
+                                        "version": {
+                                            "type": ["string", "null"]
+                                        },
+                                        "proteina": {
+                                            "type": ["string", "null"]
+                                        },
+                                        "cantidad": {
+                                            "type": "integer"
+                                        },
+                                        "precio_unitario": {
+                                            "type": "number"
+                                        },
+                                        "modificaciones": {
+                                            "type": "array",
+                                            "items": {"type": "string"}
+                                        },
+                                        "extras": {
+                                            "type": "array",
+                                            "items": {"type": "string"}
+                                        }
+                                    },
+                                    "required": [
+                                        "nombre",
+                                        "version",
+                                        "proteina",
+                                        "cantidad",
+                                        "precio_unitario",
+                                        "modificaciones",
+                                        "extras"
+                                    ],
+                                    "additionalProperties": False
+                                }
+                            },
+                            "subtotal": {"type": "number"},
+                            "descuento_porcentaje": {"type": "number"},
+                            "descuento_monto": {"type": "number"},
+                            "envio": {"type": "number"},
+                            "total": {"type": "number"},
+                            "empresa": {
+                                "type": ["string", "null"]
+                            },
+                            "modalidad": {
+                                "type": ["string", "null"]
+                            },
+                            "destino": {
+                                "type": ["string", "null"]
+                            },
+                            "punto_entrega": {
+                                "type": ["string", "null"]
+                            },
+                            "metodo_pago": {
+                                "type": ["string", "null"]
+                            },
+                            "estado_pago": {"type": "string"},
+                            "hora_solicitada": {
+                                "type": ["string", "null"]
+                            },
+                            "estado": {"type": "string"}
+                        },
+                        "required": [
+                            "productos",
+                            "subtotal",
+                            "descuento_porcentaje",
+                            "descuento_monto",
+                            "envio",
+                            "total",
+                            "empresa",
+                            "modalidad",
+                            "destino",
+                            "punto_entrega",
+                            "metodo_pago",
+                            "estado_pago",
+                            "hora_solicitada",
+                            "estado"
+                        ],
+                        "additionalProperties": False
+                    }
+                },
+                "required": [
+                    "mensaje_cliente",
+                    "pedido"
+                ],
+                "additionalProperties": False
+            }
         }
+    }
+}
         
         if respuesta_anterior:
             parametros["previous_response_id"] = respuesta_anterior
         
         response = client.responses.create(**parametros)
         
+        respuesta_json = json.loads(response.output_text)
+        
+        mensaje_cliente = respuesta_json["mensaje_cliente"]
+        pedido_actualizado = respuesta_json["pedido"]
+        
+        pedido_por_telefono[telefono_memoria] = pedido_actualizado
         ultimo_response_por_telefono[telefono_memoria] = response.id
-
-        print("Respuesta IA:", response.output_text)
-
+        
+        print("RESPUESTA CLIENTE:", mensaje_cliente)
+        print("PEDIDO ACTUALIZADO:", pedido_actualizado)
+        
         telefono_cliente = message["from"]
         # Normalizar números de México
         if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
-           telefono_cliente = "52" + telefono_cliente[3:]
+                   telefono_cliente = "52" + telefono_cliente[3:]
         phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
         whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
 
@@ -437,8 +604,8 @@ def receive_webhook():
             "to": telefono_cliente,
             "type": "text",
             "text": {
-                "body": response.output_text
-            }
+    "body": mensaje_cliente
+}
         }
 
         resultado = requests.post(
