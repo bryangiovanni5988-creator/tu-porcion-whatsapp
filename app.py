@@ -11,6 +11,8 @@ from zoneinfo import ZoneInfo
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
 
+estado_demanda_actual = "normal"
+
 ultimo_response_por_telefono = {}
 
 pedido_por_telefono = {}
@@ -97,7 +99,7 @@ def identificar_producto(nombre):
         "bowl supreme"
     ]
 
-    if normalizar_texto(nombre) in nombres_bowl:
+    if normalizar_(nombre) in nombres_bowl:
         return "bowl", "Arma tu Bowl", BOWL
 
     # PLANES
@@ -119,7 +121,7 @@ def identificar_producto(nombre):
         "10 supreme": "10_supreme",
     }
 
-    nombre_normalizado = normalizar_texto(nombre)
+    nombre_normalizado = normalizar_(nombre)
 
     if nombre_normalizado in aliases_planes:
         clave_plan = aliases_planes[nombre_normalizado]
@@ -144,7 +146,7 @@ def obtener_precio_producto(producto):
 
     # PLATILLOS
     if categoria == "platillo":
-        version_normalizada = normalizar_texto(version)
+        version_normalizada = normalizar_(version)
 
         if version_normalizada in ["fit", "regular"]:
             return float(datos["fit"]), categoria, nombre_oficial
@@ -173,7 +175,7 @@ def obtener_precio_producto(producto):
 
     # BOWL
     if categoria == "bowl":
-        version_normalizada = normalizar_texto(version)
+        version_normalizada = normalizar_(version)
 
         if version_normalizada in ["fit", "regular"]:
             return float(BOWL["regular"]), categoria, nombre_oficial
@@ -192,32 +194,32 @@ def obtener_precio_producto(producto):
 
 
 def empresa_tiene_descuento(pedido):
-    textos = [
+    s = [
         pedido.get("empresa"),
         pedido.get("destino"),
         pedido.get("punto_entrega"),
     ]
 
-    textos_normalizados = [
-        normalizar_texto(valor)
-        for valor in textos
+    s_normalizados = [
+        normalizar_(valor)
+        for valor in s
         if valor
     ]
 
-    texto_completo = " ".join(textos_normalizados)
+    _completo = " ".join(s_normalizados)
 
     # CFE
-    if "cfe" in texto_completo:
+    if "cfe" in _completo:
         return True
 
     # Destinos empresariales gratuitos
     for destino in DESTINOS_GRATIS:
-        if normalizar_texto(destino) in texto_completo:
+        if normalizar_(destino) in _completo:
             return True
 
     # Convenios explícitos
     for convenio in CONVENIOS:
-        if normalizar_texto(convenio) in texto_completo:
+        if normalizar_(convenio) in _completo:
             return True
 
     return False
@@ -296,7 +298,7 @@ def recalcular_pedido(pedido):
             2
         )
 
-    modalidad = normalizar_texto(
+    modalidad = normalizar_(
         pedido.get("modalidad")
     )
 
@@ -312,21 +314,21 @@ def recalcular_pedido(pedido):
         envio = 0.0
 
     # Destinos gratuitos
-    destino_texto = normalizar_texto(
+    destino_ = normalizar_(
         pedido.get("destino")
     )
 
-    punto_texto = normalizar_texto(
+    punto_ = normalizar_(
         pedido.get("punto_entrega")
     )
 
-    texto_destino = f"{destino_texto} {punto_texto}"
+    _destino = f"{destino_} {punto_}"
 
-    if "cfe" in texto_destino:
+    if "cfe" in _destino:
         envio = 0.0
 
     for destino_gratis in DESTINOS_GRATIS:
-        if normalizar_texto(destino_gratis) in texto_destino:
+        if normalizar_(destino_gratis) in _destino:
             envio = 0.0
             break
 
@@ -346,6 +348,23 @@ def recalcular_pedido(pedido):
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
+    @app.route("/demanda/normal")
+def demanda_normal():
+    global estado_demanda_actual
+    estado_demanda_actual = "normal"
+    return "Estado de demanda: NORMAL"
+
+@app.route("/demanda/alta")
+def demanda_alta():
+    global estado_demanda_actual
+    estado_demanda_actual = "alta_demanda"
+    return "Estado de demanda: ALTA DEMANDA"
+
+@app.route("/demanda/saturado")
+def demanda_saturado():
+    global estado_demanda_actual
+    estado_demanda_actual = "saturado"
+    return "Estado de demanda: SATURADO"
 
 @app.route("/webhook", methods=["GET"])
 def verify_webhook():
@@ -385,7 +404,7 @@ def obtener_estado_horario():
     }
 
 def construir_prompt(pedido_actual=None):
-    contexto_negocio = {
+    con_negocio = {
         "horarios": HORARIOS,
         "desayunos": DESAYUNOS,
         "bowl": BOWL,
@@ -410,8 +429,8 @@ def construir_prompt(pedido_actual=None):
         "reglas_cambios": REGLAS_CAMBIOS,
     }
 
-    contexto_json = json.dumps(
-        contexto_negocio,
+    con_json = json.dumps(
+        con_negocio,
         ensure_ascii=False
     )
     pedido_json = json.dumps(
@@ -420,6 +439,11 @@ def construir_prompt(pedido_actual=None):
     )
 
     estado_horario = obtener_estado_horario()
+
+    estado_demanda = ESTADOS_DEMANDA.get(
+    estado_demanda_actual,
+    ESTADOS_DEMANDA["normal"]
+)
     
     return f"""
 Eres el asistente de ventas por WhatsApp de Tu Porción, un restaurante de comida saludable en Hermosillo, Sonora.
@@ -468,6 +492,18 @@ VARIAR RESPUESTAS
   - "Listo"
 - No uses más de una de estas expresiones por mensaje.
 
+ESTADO ACTUAL DE DEMANDA:
+{estado_demanda_actual}
+
+TIEMPOS ESTIMADOS SEGÚN DEMANDA:
+{estado_demanda}
+
+Reglas:
+- Si el estado es "normal", atiende normalmente.
+- Si el estado es "alta_demanda", avisa antes de cerrar el pedido que hay alta demanda y usa los tiempos configurados.
+- Si el estado es "saturado", avisa claramente que hay alta saturación y usa los tiempos configurados.
+- No inventes tiempos distintos a los configurados.
+
 ESTADO ACTUAL DE LA TIENDA:
 {estado_horario}
 
@@ -495,7 +531,7 @@ HORARIOS Y DISPONIBILIDAD DE DESAYUNOS
 
 MEMORIA Y CONTINUIDAD DE LA CONVERSACIÓN
 
-- Mantén el contexto de toda la conversación y del pedido que esté en curso.
+- Mantén el con de toda la conversación y del pedido que esté en curso.
 - Una respuesta corta del cliente normalmente  a tu última pregunta.
 - Si preguntaste "¿Fit o Supreme?" y el cliente responde "Fit", conserva el platillo anterior y continúa con ese pedido.
 - Si preguntaste qué proteína quiere y responde "pollo", "res", "atún" o "camarón", conserva platillo, tamaño y demás datos anteriores.
@@ -549,7 +585,7 @@ proteína = camarón
 NUEVA CONSULTA O NUEVO PEDIDO
 
 - Si un pedido ya terminó y el cliente inicia una consulta claramente distinta, no arrastres automáticamente los productos anteriores.
-- Frases como "Hola, tienen...", "quiero pedir otra cosa", "ahora quiero..." o una nueva consulta claramente distinta pueden iniciar un nuevo contexto.
+- Frases como "Hola, tienen...", "quiero pedir otra cosa", "ahora quiero..." o una nueva consulta claramente distinta pueden iniciar un nuevo con.
 - Solo conserva productos del pedido anterior si el cliente indica que quiere agregarlos al mismo pedido.
 - No menciones un pedido anterior que ya terminó si no es relevante para la nueva conversación.
 
@@ -604,7 +640,7 @@ OBJETIVO DE LAS RECOMENDACIONES
 
 BUENAS PREGUNTAS CUANDO EL CLIENTE NO SABE QUÉ QUIERE
 
-Puedes preguntar, según el contexto:
+Puedes preguntar, según el con:
 
 - "¿Se te antoja algo ligero o más llenador?"
 - "¿Prefieres pollo, res, mariscos o te da igual?"
@@ -705,7 +741,7 @@ Cuando el cliente quiera algo que se sienta más ligero, menos pesado o de menor
 - Pasta Verde.
 - Burger Proteica.
 
-- Si utiliza la palabra "ligero", identifica por contexto si se refiere a menor cantidad de comida o a menos calorías.
+- Si utiliza la palabra "ligero", identifica por con si se refiere a menor cantidad de comida o a menos calorías.
 - Si no está claro y esa diferencia cambiaría significativamente la recomendación, pregunta brevemente.
 
 
