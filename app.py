@@ -1748,7 +1748,7 @@ def receive_webhook():
             }
         }
                 
-       if respuesta_anterior:
+if respuesta_anterior:
                 parametros["previous_response_id"] = respuesta_anterior
 
             response = client.responses.create(**parametros)
@@ -1776,6 +1776,7 @@ def receive_webhook():
             )
 
             if numeros_cambiaron:
+                
                     correccion = client.responses.create(
                         model="gpt-5.4-mini",
                         instructions="""
