@@ -1748,38 +1748,34 @@ def receive_webhook():
             }
         }
                 
-        if respuesta_anterior:
-            parametros["previous_response_id"] = respuesta_anterior
-                
+       if respuesta_anterior:
+                parametros["previous_response_id"] = respuesta_anterior
+
             response = client.responses.create(**parametros)
-        
+
             respuesta_json = json.loads(response.output_text)
-        
+
             mensaje_cliente = respuesta_json["mensaje_cliente"]
-            
             pedido_actualizado = respuesta_json["pedido"]
 
             pedido_original_modelo = pedido_actualizado.copy()
 
             pedido_actualizado = recalcular_pedido(
-            pedido_actualizado
+                pedido_actualizado
             )
 
             numeros_cambiaron = (
                 pedido_original_modelo.get("subtotal")
                 != pedido_actualizado.get("subtotal")
-                or
-                pedido_original_modelo.get("descuento_monto")
+                or pedido_original_modelo.get("descuento_monto")
                 != pedido_actualizado.get("descuento_monto")
-                or
-                pedido_original_modelo.get("envio")
+                or pedido_original_modelo.get("envio")
                 != pedido_actualizado.get("envio")
-                or
-                pedido_original_modelo.get("total")
+                or pedido_original_modelo.get("total")
                 != pedido_actualizado.get("total")
             )
-                
-                if numeros_cambiaron:
+
+            if numeros_cambiaron:
                     correccion = client.responses.create(
                         model="gpt-5.4-mini",
                         instructions="""
