@@ -438,10 +438,6 @@ def construir_prompt(pedido_actual=None):
         ensure_ascii=False
     )
 
-    contexto_json = json.dumps(
-    contexto_negocio,
-    ensure_ascii=False
-)
     estado_horario = obtener_estado_horario()
 
     estado_demanda = ESTADOS_DEMANDA.get(
@@ -1680,7 +1676,7 @@ ESTADO ESTRUCTURADO ACTUAL DEL PEDIDO:
 
 INFORMACIÓN OFICIAL Y REGLAS ACTUALES DE TU PORCIÓN:
 
-{contexto_json}
+{con_json}
 
 Usa esta información como fuente de verdad.
 Si hay conflicto entre una suposición tuya y esta información, usa esta información.
