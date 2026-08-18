@@ -1765,19 +1765,19 @@ def receive_webhook():
             pedido_actualizado
             )
 
-                numeros_cambiaron = (
-                    pedido_original_modelo.get("subtotal")
-                    != pedido_actualizado.get("subtotal")
-                    or
-                    pedido_original_modelo.get("descuento_monto")
-                    != pedido_actualizado.get("descuento_monto")
-                    or
-                    pedido_original_modelo.get("envio")
-                    != pedido_actualizado.get("envio")
-                    or
-                    pedido_original_modelo.get("total")
-                    != pedido_actualizado.get("total")
-                )
+            numeros_cambiaron = (
+                pedido_original_modelo.get("subtotal")
+                != pedido_actualizado.get("subtotal")
+                or
+                pedido_original_modelo.get("descuento_monto")
+                != pedido_actualizado.get("descuento_monto")
+                or
+                pedido_original_modelo.get("envio")
+                != pedido_actualizado.get("envio")
+                or
+                pedido_original_modelo.get("total")
+                != pedido_actualizado.get("total")
+            )
                 
                 if numeros_cambiaron:
                     correccion = client.responses.create(
