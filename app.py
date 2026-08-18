@@ -1748,73 +1748,74 @@ def receive_webhook():
             }
         }
                 
-if respuesta_anterior:
-                parametros["previous_response_id"] = respuesta_anterior
+        if respuesta_anterior:
+            parametros["previous_response_id"] = respuesta_anterior
 
-            response = client.responses.create(**parametros)
+        response = client.responses.create(**parametros)
 
-            respuesta_json = json.loads(response.output_text)
+        respuesta_json = json.loads(response.output_text)
 
-            mensaje_cliente = respuesta_json["mensaje_cliente"]
-            pedido_actualizado = respuesta_json["pedido"]
+        mensaje_cliente = respuesta_json["mensaje_cliente"]
+        pedido_actualizado = respuesta_json["pedido"]
 
-            pedido_original_modelo = pedido_actualizado.copy()
+        pedido_original_modelo = pedido_actualizado.copy()
 
-            pedido_actualizado = recalcular_pedido(
-                pedido_actualizado
+        pedido_actualizado = recalcular_pedido(
+            pedido_actualizado
+        )
+
+        numeros_cambiaron = (
+            pedido_original_modelo.get("subtotal")
+            != pedido_actualizado.get("subtotal")
+            or pedido_original_modelo.get("descuento_monto")
+            != pedido_actualizado.get("descuento_monto")
+            or pedido_original_modelo.get("envio")
+            != pedido_actualizado.get("envio")
+            or pedido_original_modelo.get("total")
+            != pedido_actualizado.get("total")
+        )
+
+        if numeros_cambiaron:
+            correccion = client.responses.create(
+                model="gpt-5.4-mini",
+                instructions="""
+Eres el asistente de WhatsApp de Tu Porción.
+
+Reescribe únicamente el mensaje para el cliente.
+
+Los datos financieros del pedido que recibes son definitivos
+y fueron calculados por el sistema.
+
+No recalcules precios.
+No cambies productos.
+No inventes información.
+Mantén el mensaje breve, amable y natural.
+""",
+                input=json.dumps(
+                    {
+                        "mensaje_anterior": mensaje_cliente,
+                        "pedido_correcto": pedido_actualizado
+                    },
+                    ensure_ascii=False
+                )
             )
 
-            numeros_cambiaron = (
-                pedido_original_modelo.get("subtotal")
-                != pedido_actualizado.get("subtotal")
-                or pedido_original_modelo.get("descuento_monto")
-                != pedido_actualizado.get("descuento_monto")
-                or pedido_original_modelo.get("envio")
-                != pedido_actualizado.get("envio")
-                or pedido_original_modelo.get("total")
-                != pedido_actualizado.get("total")
-            )
+            mensaje_cliente = correccion.output_text
 
-            if numeros_cambiaron:
-                
-                    correccion = client.responses.create(
-                        model="gpt-5.4-mini",
-                        instructions="""
-                Eres el asistente de WhatsApp de Tu Porción.
-                
-                Reescribe únicamente el mensaje para el cliente.
-                
-                Los datos financieros del pedido que recibes son definitivos
-                y fueron calculados por el sistema.
-                
-                No recalcules precios.
-                No cambies productos.
-                No inventes información.
-                Mantén el mensaje breve, amable y natural.
-                """,
-                        input=json.dumps(
-                            {
-                                "mensaje_anterior": mensaje_cliente,
-                                "pedido_correcto": pedido_actualizado
-                            },
-                            ensure_ascii=False
-                        )
-                    )
-                
-                    mensaje_cliente = correccion.output_text
-                
-                pedido_por_telefono[telefono_memoria] = pedido_actualizado
-                ultimo_response_por_telefono[telefono_memoria] = response.id
-                        
-                print("RESPUESTA CLIENTE:", mensaje_cliente)
-                print("PEDIDO ACTUALIZADO:", pedido_actualizado)
-                
-                telefono_cliente = message["from"]
-# Normalizar números de México
-if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
-           telefono_cliente = "52" + telefono_cliente[3:]
-phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
-whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
+        pedido_por_telefono[telefono_memoria] = pedido_actualizado
+        ultimo_response_por_telefono[telefono_memoria] = response.id
+
+        print("RESPUESTA CLIENTE:", mensaje_cliente)
+        print("PEDIDO ACTUALIZADO:", pedido_actualizado)
+
+        telefono_cliente = message["from"]
+
+        # Normalizar números de México
+        if telefono_cliente.startswith("521") and len(telefono_cliente) == 13:
+            telefono_cliente = "52" + telefono_cliente[3:]
+
+        phone_number_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+        whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
 
         url = f"https://graph.facebook.com/v26.0/{phone_number_id}/messages"
 
@@ -1828,8 +1829,8 @@ whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
             "to": telefono_cliente,
             "type": "text",
             "text": {
-    "body": mensaje_cliente
-}
+                "body": mensaje_cliente
+            }
         }
 
         resultado = requests.post(
@@ -1844,7 +1845,6 @@ whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
             resultado.status_code,
             resultado.text
         )
-
     except Exception as e:
         print("No se pudo procesar como mensaje de texto:", e)
 
