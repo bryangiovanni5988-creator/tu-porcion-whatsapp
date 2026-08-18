@@ -438,6 +438,10 @@ def construir_prompt(pedido_actual=None):
         ensure_ascii=False
     )
 
+    contexto_json = json.dumps(
+    contexto_negocio,
+    ensure_ascii=False
+)
     estado_horario = obtener_estado_horario()
 
     estado_demanda = ESTADOS_DEMANDA.get(
