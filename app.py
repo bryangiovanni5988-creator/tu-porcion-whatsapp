@@ -348,7 +348,7 @@ def recalcular_pedido(pedido):
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
-    @app.route("/demanda/normal")
+@app.route("/demanda/normal")
 def demanda_normal():
     global estado_demanda_actual
     estado_demanda_actual = "normal"
