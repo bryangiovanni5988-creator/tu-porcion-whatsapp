@@ -5,6 +5,8 @@ import requests
 from config_tu_porcion import *
 import json
 import unicodedata
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
@@ -357,6 +359,31 @@ def verify_webhook():
         return challenge, 200
 
     return "Forbidden", 403
+
+def obtener_estado_horario():
+    ahora = datetime.now(ZoneInfo("America/Hermosillo"))
+
+    dia = ahora.weekday()
+    hora = ahora.time()
+
+    # Lunes a viernes
+    if dia <= 4:
+        abierto = hora >= datetime.strptime("07:30", "%H:%M").time() and hora < datetime.strptime("17:00", "%H:%M").time()
+
+    # Sábado
+    elif dia == 5:
+        abierto = hora >= datetime.strptime("10:00", "%H:%M").time() and hora < datetime.strptime("16:00", "%H:%M").time()
+
+    # Domingo
+    else:
+        abierto = False
+
+    return {
+        "abierto": abierto,
+        "fecha_hora": ahora.strftime("%Y-%m-%d %H:%M"),
+        "dia_semana": ahora.strftime("%A")
+    }
+
 def construir_prompt(pedido_actual=None):
     contexto_negocio = {
         "horarios": HORARIOS,
@@ -391,6 +418,9 @@ def construir_prompt(pedido_actual=None):
         pedido_actual or crear_pedido_vacio(),
         ensure_ascii=False
     )
+
+    estado_horario = obtener_estado_horario()
+    
     return f"""
 Eres el asistente de ventas por WhatsApp de Tu Porción, un restaurante de comida saludable en Hermosillo, Sonora.
 
@@ -437,6 +467,19 @@ VARIAR RESPUESTAS
   - "Sí, claro"
   - "Listo"
 - No uses más de una de estas expresiones por mensaje.
+
+ESTADO ACTUAL DE LA TIENDA:
+{estado_horario}
+
+Si "abierto" es false:
+- Informa brevemente que la cocina está cerrada en este momento.
+- Sí puedes responder dudas sobre el menú.
+- Sí puedes ayudar a construir un pedido.
+- Ofrece dejar el pedido programado para el siguiente día disponible.
+- No hagas parecer que el pedido se preparará inmediatamente.
+
+Si "abierto" es true:
+- Atiende normalmente.
 
 HORARIOS Y DISPONIBILIDAD DE DESAYUNOS
 
