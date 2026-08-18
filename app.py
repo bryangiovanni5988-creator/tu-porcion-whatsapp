@@ -4,6 +4,7 @@ from openai import OpenAI
 import requests
 from config_tu_porcion import *
 import json
+import unicodedata
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 app = Flask(__name__)
@@ -29,7 +30,317 @@ def crear_pedido_vacio():
         "hora_solicitada": None,
         "estado": "en_construccion"
     }
-    
+
+def normalizar_texto(texto):
+    if texto is None:
+        return ""
+
+    texto = str(texto).strip().lower()
+    texto = unicodedata.normalize("NFD", texto)
+    texto = "".join(
+        caracter for caracter in texto
+        if unicodedata.category(caracter) != "Mn"
+    )
+
+    return texto
+
+
+def buscar_clave_por_nombre(nombre, diccionario):
+    nombre_normalizado = normalizar_texto(nombre)
+
+    for clave in diccionario:
+        if normalizar_texto(clave) == nombre_normalizado:
+            return clave
+
+    return None
+
+
+def identificar_producto(nombre):
+    """
+    Devuelve:
+    categoria, nombre_oficial, datos
+    """
+
+    # DESAYUNOS
+    clave = buscar_clave_por_nombre(nombre, DESAYUNOS)
+    if clave:
+        return "desayuno", clave, DESAYUNOS[clave]
+
+    # PLATILLOS
+    clave = buscar_clave_por_nombre(nombre, PLATILLOS)
+    if clave:
+        return "platillo", clave, PLATILLOS[clave]
+
+    # SUSHI
+    clave = buscar_clave_por_nombre(nombre, SUSHI)
+    if clave:
+        return "sushi", clave, SUSHI[clave]
+
+    # BEBIDAS
+    clave = buscar_clave_por_nombre(nombre, BEBIDAS)
+    if clave:
+        return "bebida", clave, BEBIDAS[clave]
+
+    # EXTRAS
+    clave = buscar_clave_por_nombre(nombre, EXTRAS)
+    if clave:
+        return "extra", clave, EXTRAS[clave]
+
+    # BOWL
+    nombres_bowl = [
+        "arma tu bowl",
+        "bowl",
+        "bowl regular",
+        "bowl fit",
+        "bowl supreme"
+    ]
+
+    if normalizar_texto(nombre) in nombres_bowl:
+        return "bowl", "Arma tu Bowl", BOWL
+
+    # PLANES
+    aliases_planes = {
+        "plan 5 fit": "5_fit",
+        "plan de 5 fit": "5_fit",
+        "5 fit": "5_fit",
+
+        "plan 5 supreme": "5_supreme",
+        "plan de 5 supreme": "5_supreme",
+        "5 supreme": "5_supreme",
+
+        "plan 10 fit": "10_fit",
+        "plan de 10 fit": "10_fit",
+        "10 fit": "10_fit",
+
+        "plan 10 supreme": "10_supreme",
+        "plan de 10 supreme": "10_supreme",
+        "10 supreme": "10_supreme",
+    }
+
+    nombre_normalizado = normalizar_texto(nombre)
+
+    if nombre_normalizado in aliases_planes:
+        clave_plan = aliases_planes[nombre_normalizado]
+        return "plan", clave_plan, PLANES[clave_plan]
+
+    return None, None, None
+
+
+def obtener_precio_producto(producto):
+    nombre = producto.get("nombre")
+    version = producto.get("version")
+
+    categoria, nombre_oficial, datos = identificar_producto(nombre)
+
+    if categoria is None:
+        print("PRECIO NO ENCONTRADO PARA:", nombre)
+        return None, None, None
+
+    # DESAYUNOS
+    if categoria == "desayuno":
+        return float(datos["precio"]), categoria, nombre_oficial
+
+    # PLATILLOS
+    if categoria == "platillo":
+        version_normalizada = normalizar_texto(version)
+
+        if version_normalizada in ["fit", "regular"]:
+            return float(datos["fit"]), categoria, nombre_oficial
+
+        if version_normalizada == "supreme":
+            return float(datos["supreme"]), categoria, nombre_oficial
+
+        print(
+            "VERSIÓN NO VÁLIDA:",
+            nombre,
+            version
+        )
+        return None, categoria, nombre_oficial
+
+    # SUSHI
+    if categoria == "sushi":
+        return float(datos), categoria, nombre_oficial
+
+    # BEBIDAS
+    if categoria == "bebida":
+        return float(datos), categoria, nombre_oficial
+
+    # EXTRAS
+    if categoria == "extra":
+        return float(datos), categoria, nombre_oficial
+
+    # BOWL
+    if categoria == "bowl":
+        version_normalizada = normalizar_texto(version)
+
+        if version_normalizada in ["fit", "regular"]:
+            return float(BOWL["regular"]), categoria, nombre_oficial
+
+        if version_normalizada == "supreme":
+            return float(BOWL["supreme"]), categoria, nombre_oficial
+
+        print("VERSIÓN DE BOWL NO VÁLIDA:", version)
+        return None, categoria, nombre_oficial
+
+    # PLAN
+    if categoria == "plan":
+        return float(datos), categoria, nombre_oficial
+
+    return None, categoria, nombre_oficial
+
+
+def empresa_tiene_descuento(pedido):
+    textos = [
+        pedido.get("empresa"),
+        pedido.get("destino"),
+        pedido.get("punto_entrega"),
+    ]
+
+    textos_normalizados = [
+        normalizar_texto(valor)
+        for valor in textos
+        if valor
+    ]
+
+    texto_completo = " ".join(textos_normalizados)
+
+    # CFE
+    if "cfe" in texto_completo:
+        return True
+
+    # Destinos empresariales gratuitos
+    for destino in DESTINOS_GRATIS:
+        if normalizar_texto(destino) in texto_completo:
+            return True
+
+    # Convenios explícitos
+    for convenio in CONVENIOS:
+        if normalizar_texto(convenio) in texto_completo:
+            return True
+
+    return False
+
+
+def precio_extra_por_nombre(nombre_extra):
+    clave = buscar_clave_por_nombre(nombre_extra, EXTRAS)
+
+    if clave:
+        return float(EXTRAS[clave])
+
+    return 0.0
+
+
+def recalcular_pedido(pedido):
+    """
+    Recalcula precios utilizando config_tu_porcion.py.
+    GPT interpreta el pedido.
+    Python manda en los números.
+    """
+
+    subtotal = 0.0
+    subtotal_elegible_descuento = 0.0
+
+    productos = pedido.get("productos", [])
+
+    for producto in productos:
+        cantidad = producto.get("cantidad", 1)
+
+        try:
+            cantidad = int(cantidad)
+        except (TypeError, ValueError):
+            cantidad = 1
+
+        if cantidad < 1:
+            cantidad = 1
+
+        producto["cantidad"] = cantidad
+
+        precio, categoria, nombre_oficial = obtener_precio_producto(
+            producto
+        )
+
+        if precio is None:
+            # No confiamos automáticamente en un precio inventado.
+            producto["precio_unitario"] = 0.0
+            continue
+
+        producto["nombre"] = nombre_oficial
+        producto["precio_unitario"] = round(precio, 2)
+
+        importe_producto = precio * cantidad
+        subtotal += importe_producto
+
+        # El descuento empresarial aplica solamente
+        # a platillos y desayunos.
+        if categoria in ["platillo", "desayuno"]:
+            subtotal_elegible_descuento += importe_producto
+
+        # Extras asociados al producto
+        for extra in producto.get("extras", []):
+            precio_extra = precio_extra_por_nombre(extra)
+
+            if precio_extra > 0:
+                subtotal += precio_extra * cantidad
+
+    subtotal = round(subtotal, 2)
+
+    descuento_porcentaje = 0
+    descuento_monto = 0.0
+
+    if empresa_tiene_descuento(pedido):
+        descuento_porcentaje = 20
+        descuento_monto = round(
+            subtotal_elegible_descuento * 0.20,
+            2
+        )
+
+    modalidad = normalizar_texto(
+        pedido.get("modalidad")
+    )
+
+    envio = pedido.get("envio", 0)
+
+    try:
+        envio = float(envio or 0)
+    except (TypeError, ValueError):
+        envio = 0.0
+
+    # Recoger nunca lleva envío.
+    if modalidad == "recoger":
+        envio = 0.0
+
+    # Destinos gratuitos
+    destino_texto = normalizar_texto(
+        pedido.get("destino")
+    )
+
+    punto_texto = normalizar_texto(
+        pedido.get("punto_entrega")
+    )
+
+    texto_destino = f"{destino_texto} {punto_texto}"
+
+    if "cfe" in texto_destino:
+        envio = 0.0
+
+    for destino_gratis in DESTINOS_GRATIS:
+        if normalizar_texto(destino_gratis) in texto_destino:
+            envio = 0.0
+            break
+
+    total = subtotal - descuento_monto + envio
+
+    pedido["subtotal"] = round(subtotal, 2)
+    pedido["descuento_porcentaje"] = descuento_porcentaje
+    pedido["descuento_monto"] = round(
+        descuento_monto,
+        2
+    )
+    pedido["envio"] = round(envio, 2)
+    pedido["total"] = round(total, 2)
+
+    return pedido
+
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
