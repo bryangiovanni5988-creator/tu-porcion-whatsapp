@@ -364,6 +364,46 @@ def db_test():
 
     except Exception as e:
         return f"Error de base de datos: {e}", 500
+
+@app.route("/pedidos-test")
+def pedidos_test():
+    database_url = os.environ.get("DATABASE_URL")
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        id,
+                        telefono,
+                        pedido,
+                        estado,
+                        requiere_revision,
+                        actualizado_en
+                    FROM pedidos_whatsapp
+                    ORDER BY actualizado_en DESC
+                    LIMIT 20;
+                """)
+
+                filas = cur.fetchall()
+
+        pedidos = []
+
+        for fila in filas:
+            pedidos.append({
+                "id": fila[0],
+                "telefono": fila[1],
+                "pedido": fila[2],
+                "estado": fila[3],
+                "requiere_revision": fila[4],
+                "actualizado_en": fila[5].isoformat()
+            })
+
+        return {"pedidos": pedidos}
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+        
 def crear_tablas():
     database_url = os.environ.get("DATABASE_URL")
 
