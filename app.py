@@ -560,7 +560,31 @@ def guardar_pedido_db(telefono, pedido):
 
     except Exception as e:
         print("Error guardando pedido en DB:", e)
-        
+
+def cargar_pedido_db(telefono):
+    database_url = os.environ.get("DATABASE_URL")
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT pedido
+                    FROM pedidos_whatsapp
+                    WHERE telefono = %s
+                      AND estado = 'en_construccion'
+                    LIMIT 1;
+                """, (telefono,))
+
+                fila = cur.fetchone()
+
+        if fila:
+            return fila[0]
+
+    except Exception as e:
+        print("Error cargando pedido desde DB:", e)
+
+    return None
+    
 @app.route("/demanda/normal")
 def demanda_normal():
     global estado_demanda_actual
