@@ -421,8 +421,15 @@ def crear_tablas():
                     actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );
             """)
-
-        conn.commit()
+            cur.execute("""
+                            ALTER TABLE pedidos_whatsapp
+                            ADD COLUMN IF NOT EXISTS confirmado_en TIMESTAMPTZ,
+                            ADD COLUMN IF NOT EXISTS minutos_preparacion INTEGER,
+                            ADD COLUMN IF NOT EXISTS listo_objetivo_en TIMESTAMPTZ,
+                            ADD COLUMN IF NOT EXISTS preparacion_iniciada_en TIMESTAMPTZ,
+                            ADD COLUMN IF NOT EXISTS listo_en TIMESTAMPTZ;
+                        """)
+                    conn.commit()
 
 @app.route("/admin/pedidos")
 def admin_pedidos():
