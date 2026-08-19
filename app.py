@@ -383,6 +383,13 @@ def crear_tablas():
             """)
 
         conn.commit()
+@app.route("/crear-tablas")
+def crear_tablas_route():
+    try:
+        crear_tablas()
+        return "Tablas creadas correctamente"
+    except Exception as e:
+        return f"Error creando tablas: {e}", 500
         
 def crear_tablas():
     database_url = os.environ.get("DATABASE_URL")
