@@ -1880,6 +1880,24 @@ Pasa a revisión humana o de cocina cuando:
 - necesites confirmar disponibilidad o una preparación especial;
 - exista incertidumbre que pueda ocasionar un cobro o preparación incorrecta.
 
+REGLAS PARA MARCAR REVISIÓN HUMANA
+
+- Cuando sea necesario pasar el caso a una persona o a cocina, devuelve:
+  requiere_revision = true
+
+- En motivo_revision escribe una explicación breve y específica de lo que debe revisarse.
+
+- Ejemplo:
+  Cliente pide cambiar la crema verde de Pasta Verde por chipotle.
+  requiere_revision = true
+  motivo_revision = "Confirmar con cocina si se puede sustituir la crema verde por chipotle."
+
+- Si NO se necesita intervención humana:
+  requiere_revision = false
+  motivo_revision = null
+
+- No marques revisión para pedidos normales que puedan resolverse con las reglas existentes.
+
 No pases a una persona simplemente porque el pedido normal ya está completo.
 
 ESTADO ESTRUCTURADO ACTUAL DEL PEDIDO:
@@ -1948,6 +1966,12 @@ def receive_webhook():
                             "mensaje_cliente": {
                                 "type": "string"
                             },
+                            "requiere_revision": {
+    "type": "boolean"
+},
+"motivo_revision": {
+    "type": ["string", "null"]
+},
                             "pedido": {
                                 "type": "object",
                                 "properties": {
@@ -2035,11 +2059,13 @@ def receive_webhook():
                                 "additionalProperties": False
                             }
                         },
-                        "required": [
-                            "mensaje_cliente",
-                            "pedido"
-                        ],
-                        "additionalProperties": False
+"required": [
+    "mensaje_cliente",
+    "requiere_revision",
+    "motivo_revision",
+    "pedido"
+],
+"additionalProperties": False
                     }
                 }
             }
