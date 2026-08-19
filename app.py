@@ -121,7 +121,7 @@ def identificar_producto(nombre):
         "10 supreme": "10_supreme",
     }
 
-    nombre_normalizado = normalizar_(nombre)
+    nombre_normalizado = normalizar_texto(nombre)
 
     if nombre_normalizado in aliases_planes:
         clave_plan = aliases_planes[nombre_normalizado]
@@ -146,7 +146,7 @@ def obtener_precio_producto(producto):
 
     # PLATILLOS
     if categoria == "platillo":
-        version_normalizada = normalizar_(version)
+        version_normalizada = normalizar_texto(version)
 
         if version_normalizada in ["fit", "regular"]:
             return float(datos["fit"]), categoria, nombre_oficial
@@ -175,7 +175,7 @@ def obtener_precio_producto(producto):
 
     # BOWL
     if categoria == "bowl":
-        version_normalizada = normalizar_(version)
+        version_normalizada = normalizar_texto(version)
 
         if version_normalizada in ["fit", "regular"]:
             return float(BOWL["regular"]), categoria, nombre_oficial
@@ -201,7 +201,7 @@ def empresa_tiene_descuento(pedido):
     ]
 
     s_normalizados = [
-        normalizar_(valor)
+        normalizar_texto(valor)
         for valor in s
         if valor
     ]
@@ -214,12 +214,12 @@ def empresa_tiene_descuento(pedido):
 
     # Destinos empresariales gratuitos
     for destino in DESTINOS_GRATIS:
-        if normalizar_(destino) in _completo:
+        if normalizar_texto(destino) in _completo:
             return True
 
     # Convenios explícitos
     for convenio in CONVENIOS:
-        if normalizar_(convenio) in _completo:
+        if normalizar_texto(convenio) in _completo:
             return True
 
     return False
@@ -298,7 +298,7 @@ def recalcular_pedido(pedido):
             2
         )
 
-    modalidad = normalizar_(
+    modalidad = normalizar_texto(
         pedido.get("modalidad")
     )
 
@@ -314,11 +314,11 @@ def recalcular_pedido(pedido):
         envio = 0.0
 
     # Destinos gratuitos
-    destino_ = normalizar_(
+    destino_ = normalizar_texto(
         pedido.get("destino")
     )
 
-    punto_ = normalizar_(
+    punto_ = normalizar_texto(
         pedido.get("punto_entrega")
     )
 
@@ -328,7 +328,7 @@ def recalcular_pedido(pedido):
         envio = 0.0
 
     for destino_gratis in DESTINOS_GRATIS:
-        if normalizar_(destino_gratis) in _destino:
+        if normalizar_texto(destino_gratis) in _destino:
             envio = 0.0
             break
 
