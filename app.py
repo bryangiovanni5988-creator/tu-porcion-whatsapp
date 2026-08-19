@@ -429,7 +429,7 @@ def crear_tablas():
                             ADD COLUMN IF NOT EXISTS preparacion_iniciada_en TIMESTAMPTZ,
                             ADD COLUMN IF NOT EXISTS listo_en TIMESTAMPTZ;
                         """)
-                    conn.commit()
+        conn.commit()
 
 @app.route("/admin/pedidos")
 def admin_pedidos():
