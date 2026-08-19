@@ -1,4 +1,5 @@
 import os
+import psycopg
 from flask import Flask, request
 from openai import OpenAI
 import requests
@@ -348,6 +349,22 @@ def recalcular_pedido(pedido):
 @app.route("/")
 def home():
     return "Tu Porcion backend funcionando"
+
+@app.route("/db-test")
+def db_test():
+    database_url = os.environ.get("DATABASE_URL")
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1;")
+                resultado = cur.fetchone()
+
+        return f"Base de datos conectada: {resultado[0]}"
+
+    except Exception as e:
+        return f"Error de base de datos: {e}", 500
+        
 @app.route("/demanda/normal")
 def demanda_normal():
     global estado_demanda_actual
