@@ -459,6 +459,27 @@ def admin_pedidos():
         for fila in filas:
             pedido = fila[2]
 
+            estado = fila[3]
+            requiere_revision = fila[4]
+
+            if requiere_revision:
+                estado_visual = "🟠 Requiere revisión"
+            elif estado == "confirmado":
+                estado_visual = "🟢 Confirmado"
+            elif estado == "en_preparacion":
+                estado_visual = "🔵 En preparación"
+            elif estado == "listo":
+                estado_visual = "✅ Listo"
+            elif estado == "entregado":
+                estado_visual = "⚫ Entregado"
+            else:
+                estado_visual = "🟡 En construcción"
+
+            modalidad = pedido.get("modalidad") or "Pendiente"
+            metodo_pago = pedido.get("metodo_pago") or "Pendiente"
+            hora_solicitada = pedido.get("hora_solicitada") or "Sin definir"
+            destino = pedido.get("destino") or "Sin definir"
+
             html += f"""
             <div style="
                 border: 1px solid #ccc;
@@ -467,8 +488,13 @@ def admin_pedidos():
                 margin-bottom: 16px;
             ">
                 <h2>Pedido #{fila[0]}</h2>
+
+                <p><b>Estado:</b> {estado_visual}</p>
                 <p><b>Teléfono:</b> {fila[1]}</p>
-                <p><b>Estado:</b> {fila[3]}</p>
+                <p><b>Modalidad:</b> {modalidad}</p>
+                <p><b>Destino:</b> {destino}</p>
+                <p><b>Hora solicitada:</b> {hora_solicitada}</p>
+                <p><b>Pago:</b> {metodo_pago}</p>
                 <p><b>Total:</b> ${pedido.get('total', 0)}</p>
                 <p><b>Actualizado:</b> {fila[5]}</p>
 
@@ -486,7 +512,7 @@ def admin_pedidos():
                 """
 
             html += "</div>"
-
+            
         html += """
         </body>
         </html>
