@@ -1964,18 +1964,17 @@ def receive_webhook():
 
         telefono_memoria = message["from"]
 
-       pedido_actual = pedido_por_telefono.get(telefono_memoria)
+pedido_actual = pedido_por_telefono.get(telefono_memoria)
 
-    if pedido_actual is None:
-    pedido_actual = cargar_pedido_db(telefono_memoria)
+        if pedido_actual is None:
+            pedido_actual = cargar_pedido_db(telefono_memoria)
 
-    if pedido_actual is None:
-        pedido_actual = crear_pedido_vacio()
+            if pedido_actual is None:
+                pedido_actual = crear_pedido_vacio()
 
-    pedido_por_telefono[telefono_memoria] = pedido_actual
-        
+            pedido_por_telefono[telefono_memoria] = pedido_actual
+
         print("PEDIDO ACTUAL:", pedido_actual)
-
         respuesta_anterior = ultimo_response_por_telefono.get(telefono_memoria)
         print("TEL MEMORIA:", telefono_memoria)
         print("PREVIOUS:", respuesta_anterior)
