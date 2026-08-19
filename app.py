@@ -423,6 +423,80 @@ def crear_tablas():
             """)
 
         conn.commit()
+
+@app.route("/admin/pedidos")
+def admin_pedidos():
+    database_url = os.environ.get("DATABASE_URL")
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        id,
+                        telefono,
+                        pedido,
+                        estado,
+                        requiere_revision,
+                        actualizado_en
+                    FROM pedidos_whatsapp
+                    ORDER BY actualizado_en DESC
+                    LIMIT 50;
+                """)
+
+                filas = cur.fetchall()
+
+        html = """
+        <html>
+        <head>
+            <title>Pedidos WhatsApp</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body style="font-family: Arial; padding: 20px;">
+            <h1>Pedidos WhatsApp</h1>
+        """
+
+        for fila in filas:
+            pedido = fila[2]
+
+            html += f"""
+            <div style="
+                border: 1px solid #ccc;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 16px;
+            ">
+                <h2>Pedido #{fila[0]}</h2>
+                <p><b>Teléfono:</b> {fila[1]}</p>
+                <p><b>Estado:</b> {fila[3]}</p>
+                <p><b>Total:</b> ${pedido.get('total', 0)}</p>
+                <p><b>Actualizado:</b> {fila[5]}</p>
+
+                <h3>Productos</h3>
+            """
+
+            for producto in pedido.get("productos", []):
+                html += f"""
+                <p>
+                    {producto.get('cantidad', 1)} x
+                    {producto.get('nombre', '')}
+                    {producto.get('version') or ''}
+                    - ${producto.get('precio_unitario', 0)}
+                </p>
+                """
+
+            html += "</div>"
+
+        html += """
+        </body>
+        </html>
+        """
+
+        return html
+
+    except Exception as e:
+        return f"Error cargando pedidos: {e}", 500
+
 @app.route("/crear-tablas")
 def crear_tablas_route():
     try:
