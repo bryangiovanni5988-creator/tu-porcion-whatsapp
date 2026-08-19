@@ -390,26 +390,36 @@ def crear_tablas_route():
         return "Tablas creadas correctamente"
     except Exception as e:
         return f"Error creando tablas: {e}", 500
-        
-def crear_tablas():
+def guardar_pedido_db(telefono, pedido):
     database_url = os.environ.get("DATABASE_URL")
 
-    with psycopg.connect(database_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS pedidos_whatsapp (
-                    id SERIAL PRIMARY KEY,
-                    telefono VARCHAR(30) NOT NULL UNIQUE,
-                    pedido JSONB NOT NULL,
-                    estado VARCHAR(50) NOT NULL DEFAULT 'en_construccion',
-                    requiere_revision BOOLEAN NOT NULL DEFAULT FALSE,
-                    motivo_revision TEXT,
-                    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
-                );
-            """)
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO pedidos_whatsapp (
+                        telefono,
+                        pedido,
+                        estado,
+                        actualizado_en
+                    )
+                    VALUES (%s, %s::jsonb, %s, NOW())
 
-        conn.commit()
+                    ON CONFLICT (telefono)
+                    DO UPDATE SET
+                        pedido = EXCLUDED.pedido,
+                        estado = EXCLUDED.estado,
+                        actualizado_en = NOW();
+                """, (
+                    telefono,
+                    json.dumps(pedido, ensure_ascii=False),
+                    pedido.get("estado", "en_construccion")
+                ))
+
+            conn.commit()
+
+    except Exception as e:
+        print("Error guardando pedido en DB:", e)
         
 @app.route("/demanda/normal")
 def demanda_normal():
@@ -1950,6 +1960,12 @@ Mantén el mensaje breve, amable y natural.
             mensaje_cliente = correccion.output_text
 
         pedido_por_telefono[telefono_memoria] = pedido_actualizado
+
+        guardar_pedido_db(
+            telefono_memoria,
+            pedido_actualizado
+        )
+
         ultimo_response_por_telefono[telefono_memoria] = response.id
 
         print("RESPUESTA CLIENTE:", mensaje_cliente)
