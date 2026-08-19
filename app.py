@@ -364,6 +364,45 @@ def db_test():
 
     except Exception as e:
         return f"Error de base de datos: {e}", 500
+def crear_tablas():
+    database_url = os.environ.get("DATABASE_URL")
+
+    with psycopg.connect(database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS pedidos_whatsapp (
+                    id SERIAL PRIMARY KEY,
+                    telefono VARCHAR(30) NOT NULL UNIQUE,
+                    pedido JSONB NOT NULL,
+                    estado VARCHAR(50) NOT NULL DEFAULT 'en_construccion',
+                    requiere_revision BOOLEAN NOT NULL DEFAULT FALSE,
+                    motivo_revision TEXT,
+                    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+
+        conn.commit()
+        
+def crear_tablas():
+    database_url = os.environ.get("DATABASE_URL")
+
+    with psycopg.connect(database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS pedidos_whatsapp (
+                    id SERIAL PRIMARY KEY,
+                    telefono VARCHAR(30) NOT NULL UNIQUE,
+                    pedido JSONB NOT NULL,
+                    estado VARCHAR(50) NOT NULL DEFAULT 'en_construccion',
+                    requiere_revision BOOLEAN NOT NULL DEFAULT FALSE,
+                    motivo_revision TEXT,
+                    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                );
+            """)
+
+        conn.commit()
         
 @app.route("/demanda/normal")
 def demanda_normal():
