@@ -554,10 +554,12 @@ def guardar_pedido_db(
                         telefono,
                         pedido,
                         estado,
+                        requiere_revision,
+                        motivo_revision,
                         actualizado_en
                     )
-                    VALUES (%s, %s::jsonb, %s, NOW())
-
+                    VALUES (%s, %s::jsonb, %s, %s, %s, NOW())
+                
                     ON CONFLICT (telefono)
                     DO UPDATE SET
                         pedido = EXCLUDED.pedido,
