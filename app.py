@@ -574,10 +574,11 @@ try:
                 motivo_revision
             ))
 
-        conn.commit()
+conn.commit()
+print("✅ PEDIDO GUARDADO EN DB:", telefono)
 
 except Exception as e:
-    print("Error guardando pedido en DB:", e)
+    print("❌ ERROR GUARDANDO PEDIDO EN DB:", repr(e))
 
 def cargar_pedido_db(telefono):
     database_url = os.environ.get("DATABASE_URL")
