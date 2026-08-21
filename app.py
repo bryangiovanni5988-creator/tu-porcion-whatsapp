@@ -545,36 +545,39 @@ def guardar_pedido_db(
     motivo_revision
 ):
     database_url = os.environ.get("DATABASE_URL")
-
-    try:
-        with psycopg.connect(database_url) as conn:
-            with conn.cursor() as cur:
-                cur.execute("""
-                    INSERT INTO pedidos_whatsapp (
-                        telefono,
-                        pedido,
-                        estado,
-                        requiere_revision,
-                        motivo_revision,
-                        actualizado_en
-                    )
-                    VALUES (%s, %s::jsonb, %s, %s, %s, NOW())
-                
-                    ON CONFLICT (telefono)
-                    DO UPDATE SET
-                        pedido = EXCLUDED.pedido,
-                        estado = EXCLUDED.estado,
-                        actualizado_en = NOW();
-                """, (
+try:
+    with psycopg.connect(database_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO pedidos_whatsapp (
                     telefono,
-                    json.dumps(pedido, ensure_ascii=False),
-                    pedido.get("estado", "en_construccion")
-                ))
+                    pedido,
+                    estado,
+                    requiere_revision,
+                    motivo_revision,
+                    actualizado_en
+                )
+                VALUES (%s, %s::jsonb, %s, %s, %s, NOW())
 
-            conn.commit()
+                ON CONFLICT (telefono)
+                DO UPDATE SET
+                    pedido = EXCLUDED.pedido,
+                    estado = EXCLUDED.estado,
+                    requiere_revision = EXCLUDED.requiere_revision,
+                    motivo_revision = EXCLUDED.motivo_revision,
+                    actualizado_en = NOW();
+            """, (
+                telefono,
+                json.dumps(pedido, ensure_ascii=False),
+                pedido.get("estado", "en_construccion"),
+                requiere_revision,
+                motivo_revision
+            ))
 
-    except Exception as e:
-        print("Error guardando pedido en DB:", e)
+        conn.commit()
+
+except Exception as e:
+    print("Error guardando pedido en DB:", e)
 
 def cargar_pedido_db(telefono):
     database_url = os.environ.get("DATABASE_URL")
