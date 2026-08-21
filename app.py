@@ -33,6 +33,7 @@ def crear_pedido_vacio():
         "metodo_pago": None,
         "estado_pago": "pendiente",
         "hora_solicitada": None,
+        "programado_para": None,
         "estado": "en_construccion"
     }
 
@@ -2072,6 +2073,9 @@ def receive_webhook():
                                     "hora_solicitada": {
                                         "type": ["string", "null"]
                                     },
+                                    "programado_para": {
+                                    "type": ["string", "null"]
+                                    },
                                     "estado": {"type": "string"}
                                 },
                                 "required": [
@@ -2088,6 +2092,7 @@ def receive_webhook():
                                     "metodo_pago",
                                     "estado_pago",
                                     "hora_solicitada",
+                                    "programado_para",
                                     "estado"
                                 ],
                                 "additionalProperties": False
