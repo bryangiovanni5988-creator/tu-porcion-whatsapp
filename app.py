@@ -545,40 +545,41 @@ def guardar_pedido_db(
     motivo_revision
 ):
     database_url = os.environ.get("DATABASE_URL")
-try:
-    with psycopg.connect(database_url) as conn:
-        with conn.cursor() as cur:
-            cur.execute("""
-                INSERT INTO pedidos_whatsapp (
+
+    try:
+        with psycopg.connect(database_url) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO pedidos_whatsapp (
+                        telefono,
+                        pedido,
+                        estado,
+                        requiere_revision,
+                        motivo_revision,
+                        actualizado_en
+                    )
+                    VALUES (%s, %s::jsonb, %s, %s, %s, NOW())
+
+                    ON CONFLICT (telefono)
+                    DO UPDATE SET
+                        pedido = EXCLUDED.pedido,
+                        estado = EXCLUDED.estado,
+                        requiere_revision = EXCLUDED.requiere_revision,
+                        motivo_revision = EXCLUDED.motivo_revision,
+                        actualizado_en = NOW();
+                """, (
                     telefono,
-                    pedido,
-                    estado,
+                    json.dumps(pedido, ensure_ascii=False),
+                    pedido.get("estado", "en_construccion"),
                     requiere_revision,
-                    motivo_revision,
-                    actualizado_en
-                )
-                VALUES (%s, %s::jsonb, %s, %s, %s, NOW())
+                    motivo_revision
+                ))
 
-                ON CONFLICT (telefono)
-                DO UPDATE SET
-                    pedido = EXCLUDED.pedido,
-                    estado = EXCLUDED.estado,
-                    requiere_revision = EXCLUDED.requiere_revision,
-                    motivo_revision = EXCLUDED.motivo_revision,
-                    actualizado_en = NOW();
-            """, (
-                telefono,
-                json.dumps(pedido, ensure_ascii=False),
-                pedido.get("estado", "en_construccion"),
-                requiere_revision,
-                motivo_revision
-            ))
+            conn.commit()
+            print("✅ PEDIDO GUARDADO EN DB:", telefono)
 
-conn.commit()
-print("✅ PEDIDO GUARDADO EN DB:", telefono)
-
-except Exception as e:
-    print("❌ ERROR GUARDANDO PEDIDO EN DB:", repr(e))
+    except Exception as e:
+        print("❌ ERROR GUARDANDO PEDIDO EN DB:", repr(e))
 
 def cargar_pedido_db(telefono):
     database_url = os.environ.get("DATABASE_URL")
