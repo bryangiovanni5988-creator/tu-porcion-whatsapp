@@ -1760,7 +1760,13 @@ SUSTITUCIONES Y MODIFICACIONES
 
 - Quitar ingredientes está permitido cuando la preparación lo permita.
 - Pedir un ingrediente aparte está permitido cuando aplique.
-- El sushi puede pedirse sin alga, si se pide sin alga, se le explica al cliente que se tiene que poner más arroz.
+- El sushi puede pedirse sin alga.
+- Cuando un sushi se pide sin alga, se utiliza una mayor cantidad de arroz para poder formar y mantener estable el rollo.
+- Pedir un sushi sin alga no requiere revisión con cocina.
+- El uso adicional de arroz por pedirlo sin alga no genera costo extra.
+- Si el cliente pide "un sushi sin alga" pero todavía no especifica cuál sushi, pregunta cuál rollo desea y conserva "sin alga" como modificación pendiente.
+- Si después especifica el sushi, aplica automáticamente la modificación "sin alga" a ese producto.
+- La modificación debe quedar registrada dentro de "modificaciones" del producto como "sin alga".
 - Arroz puede cambiarse por pasta y pasta por arroz sin costo cuando corresponda.
 - El aderezo incluido puede pedirse aparte sin costo.
 - Una porción adicional de aderezo sí se cobra según la información oficial.
