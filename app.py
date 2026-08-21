@@ -446,7 +446,8 @@ def admin_pedidos():
                         pedido,
                         estado,
                         requiere_revision,
-                        actualizado_en
+                        actualizado_en,
+                        motivo_revision
                     FROM pedidos_whatsapp
                     ORDER BY actualizado_en DESC
                     LIMIT 50;
@@ -472,6 +473,7 @@ def admin_pedidos():
 
             if requiere_revision:
                 estado_visual = "🟠 Requiere revisión"
+                motivo_revision = fila[6] if len(fila) > 6 else None
             elif estado == "confirmado":
                 estado_visual = "🟢 Confirmado"
             elif estado == "en_preparacion":
@@ -498,6 +500,7 @@ def admin_pedidos():
                 <h2>Pedido #{fila[0]}</h2>
 
                 <p><b>Estado:</b> {estado_visual}</p>
+                {f'<p><b>Motivo de revisión:</b> {motivo_revision}</p>' if motivo_revision else ''}
                 <p><b>Teléfono:</b> {fila[1]}</p>
                 <p><b>Modalidad:</b> {modalidad}</p>
                 <p><b>Destino:</b> {destino}</p>
