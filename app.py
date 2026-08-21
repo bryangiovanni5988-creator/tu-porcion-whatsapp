@@ -2116,8 +2116,10 @@ def receive_webhook():
         response = client.responses.create(**parametros)
 
         respuesta_json = json.loads(response.output_text)
-
+        
         mensaje_cliente = respuesta_json["mensaje_cliente"]
+        requiere_revision = respuesta_json["requiere_revision"]
+        motivo_revision = respuesta_json["motivo_revision"]
         pedido_actualizado = respuesta_json["pedido"]
 
         pedido_original_modelo = pedido_actualizado.copy()
