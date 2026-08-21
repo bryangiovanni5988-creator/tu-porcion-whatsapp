@@ -538,7 +538,12 @@ def crear_tablas_route():
         return "Tablas creadas correctamente"
     except Exception as e:
         return f"Error creando tablas: {e}", 500
-def guardar_pedido_db(telefono, pedido):
+def guardar_pedido_db(
+    telefono,
+    pedido,
+    requiere_revision,
+    motivo_revision
+):
     database_url = os.environ.get("DATABASE_URL")
 
     try:
@@ -2170,7 +2175,9 @@ Mantén el mensaje breve, amable y natural.
 
         guardar_pedido_db(
             telefono_memoria,
-            pedido_actualizado
+            pedido_actualizado,
+            requiere_revision,
+            motivo_revision
         )
 
         ultimo_response_por_telefono[telefono_memoria] = response.id
