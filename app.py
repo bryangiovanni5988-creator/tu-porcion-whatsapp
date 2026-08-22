@@ -2110,8 +2110,17 @@ def receive_webhook():
                                     "programado_para": {
                                     "type": ["string", "null"]
                                     },
-                                    "estado": {"type": "string"}
-                                },
+                                 "estado": {
+                                    "type": "string",
+                                    "enum": [
+                                        "en_construccion",
+                                        "confirmado",
+                                        "en_preparacion",
+                                        "listo",
+                                        "entregado",
+                                        "cancelado"
+                                    ]
+                                }
                                 "required": [
                                     "productos",
                                     "subtotal",
