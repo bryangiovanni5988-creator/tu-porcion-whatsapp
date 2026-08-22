@@ -2227,49 +2227,49 @@ Mantén el mensaje breve, amable y natural.
             mensaje_cliente = correccion.output_text
             texto_normalizado = normalizar_texto(texto)
 
-    metodo_anterior = normalizar_texto(
-        pedido_actual.get("metodo_pago")
-    )
-    metodo_actualizado = normalizar_texto(
-        pedido_actualizado.get("metodo_pago")
-    )
-
-    selecciono_transferencia = (
-        "transferencia" in metodo_actualizado
-        and "transferencia" not in metodo_anterior
-    )
-
-    solicita_datos_transferencia = (
-        selecciono_transferencia
-        or any(
-            frase in texto_normalizado
-            for frase in [
-                "clabe",
-                "datos bancarios",
-                "datos para transferir",
-                "cuenta para transferir",
-                "a que cuenta",
-                "a donde transfiero",
-                "donde transfiero",
-                "donde deposito"
-            ]
-        )
-    )
-
-    if solicita_datos_transferencia:
-        mensaje_transferencia = obtener_mensaje_transferencia()
-
-        if mensaje_transferencia:
-            mensaje_cliente = mensaje_transferencia
-        else:
-            requiere_revision = True
-            motivo_revision = (
-                "Faltan datos de transferencia en Render."
+            metodo_anterior = normalizar_texto(
+                pedido_actual.get("metodo_pago")
             )
-            mensaje_cliente = (
-                "Permíteme confirmar los datos de transferencia "
-                "con el equipo."
+            metodo_actualizado = normalizar_texto(
+                pedido_actualizado.get("metodo_pago")
             )
+        
+            selecciono_transferencia = (
+                "transferencia" in metodo_actualizado
+                and "transferencia" not in metodo_anterior
+            )
+        
+            solicita_datos_transferencia = (
+                selecciono_transferencia
+                or any(
+                    frase in texto_normalizado
+                    for frase in [
+                        "clabe",
+                        "datos bancarios",
+                        "datos para transferir",
+                        "cuenta para transferir",
+                        "a que cuenta",
+                        "a donde transfiero",
+                        "donde transfiero",
+                        "donde deposito"
+                    ]
+                )
+            )
+        
+            if solicita_datos_transferencia:
+                mensaje_transferencia = obtener_mensaje_transferencia()
+        
+                if mensaje_transferencia:
+                    mensaje_cliente = mensaje_transferencia
+                else:
+                    requiere_revision = True
+                    motivo_revision = (
+                        "Faltan datos de transferencia en Render."
+                    )
+                    mensaje_cliente = (
+                        "Permíteme confirmar los datos de transferencia "
+                        "con el equipo."
+                    )
         pedido_cancelado = (
             pedido_actual.get("estado") == "en_construccion"
             and pedido_actualizado.get("estado") == "cancelado"
