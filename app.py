@@ -101,7 +101,7 @@ def identificar_producto(nombre):
         "bowl supreme"
     ]
 
-    if normalizar_(nombre) in nombres_bowl:
+    if normalizar_texto(nombre) in nombres_bowl:
         return "bowl", "Arma tu Bowl", BOWL
 
     # PLANES
@@ -404,7 +404,7 @@ def pedidos_test():
 
     except Exception as e:
         return {"error": str(e)}, 500
-        
+
 def crear_tablas():
     database_url = os.environ.get("DATABASE_URL")
 
@@ -470,10 +470,10 @@ def admin_pedidos():
 
             estado = fila[3]
             requiere_revision = fila[4]
+            motivo_revision = fila[6]
 
             if requiere_revision:
                 estado_visual = "🟠 Requiere revisión"
-                motivo_revision = fila[6] if len(fila) > 6 else None
             elif estado == "confirmado":
                 estado_visual = "🟢 Confirmado"
             elif estado == "en_preparacion":
