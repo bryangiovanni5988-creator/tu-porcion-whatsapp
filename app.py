@@ -482,6 +482,8 @@ def admin_pedidos():
                 estado_visual = "✅ Listo"
             elif estado == "entregado":
                 estado_visual = "⚫ Entregado"
+            elif estado == "cancelado":
+                estado_visual = "🔴 Cancelado"
             else:
                 estado_visual = "🟡 En construcción"
 
