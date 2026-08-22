@@ -211,10 +211,21 @@ PEDIDOS_PROGRAMADOS = {
 }
 
 REGLAS_CAMBIOS = {
-    "antes_de_cocina": "Permitir y recalcular",
-    "en_preparacion": "Pasar a revisión humana",
-    "cancelacion_antes_de_cocina": "Permitir",
-    "cancelacion_en_preparacion": "Pasar a revisión humana",
+    "antes_de_cocina": "Permitir cambios y recalcular el pedido.",
+    "en_preparacion": "Los cambios requieren revisión humana.",
+
+    "cancelacion_en_construccion": "Permitir cancelación automática sin revisión humana.",
+    "cancelacion_confirmado": "Pasar a revisión humana.",
+    "cancelacion_en_preparacion": "Pasar a revisión humana.",
+    "cancelacion_listo": "Pasar a revisión humana.",
+
+    "reglas_cancelacion": [
+        "El estado real del pedido se determina por el campo estado del pedido.",
+        "No afirmar que el pedido está en cocina o en proceso si el estado no lo indica.",
+        "Si el estado es en_construccion y el cliente pide cancelar, aceptar la cancelación sin revisión humana.",
+        "Si el cliente dice no lo canceles o siempre sí antes de que avance a cocina, conservar o reactivar el pedido.",
+        "Si el estado es confirmado, en_preparacion o listo, la cancelación debe pasar a revisión humana."
+    ]
 }
 
 REGLAS_PLANES_MVP = "Si el cliente menciona que tiene plan, tomar pedido y marcar REVISIÓN DE PLAN."
