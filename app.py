@@ -2210,14 +2210,26 @@ Mantén el mensaje breve, amable y natural.
 
             mensaje_cliente = correccion.output_text
 
-        pedido_por_telefono[telefono_memoria] = pedido_actualizado
+        pedido_cancelado = (
+    pedido_actual.get("estado") == "en_construccion"
+    and pedido_actualizado.get("estado") == "cancelado"
+)
 
-        guardar_pedido_db(
-            telefono_memoria,
-            pedido_actualizado,
-            requiere_revision,
-            motivo_revision
-        )
+if pedido_cancelado:
+    requiere_revision = False
+    motivo_revision = None
+
+pedido_por_telefono[telefono_memoria] = pedido_actualizado
+
+guardar_pedido_db(
+    telefono_memoria,
+    pedido_actualizado,
+    requiere_revision,
+    motivo_revision
+)
+
+if pedido_cancelado:
+    pedido_por_telefono.pop(telefono_memoria, None)
 
         ultimo_response_por_telefono[telefono_memoria] = response.id
 
