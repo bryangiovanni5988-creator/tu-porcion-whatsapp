@@ -2121,6 +2121,7 @@ def receive_webhook():
                                         "cancelado"
                                     ]
                                 }
+                                },
                                 "required": [
                                     "productos",
                                     "subtotal",
